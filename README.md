@@ -49,6 +49,15 @@ You can run the application directly from the binary or open the created bundle.
 ./key_blocker --log-level debug
 ```
 
+### Installing from DMG
+
+1. Download the latest `KeyBlocker.dmg` from the [Releases](https://github.com/malvads/KeyBlocker/releases) page.
+2. Open the `.dmg` file.
+3. Drag `KeyBlocker.app` into your `/Applications` folder.
+4. Launch the app and grant the required **Accessibility Permissions** when prompted.
+5. Relaunch the app (if permissions were granted)
+
+
 ## Usage
 
 ![KeyBlocker](assets/example.png)
