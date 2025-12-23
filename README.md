@@ -4,6 +4,8 @@
   <img src="assets/tray.png" alt="KeyBlocker" width="200">
 </p>
 
+Another random crap I created because I was annoyed of random windows popping up and so. Honestly, I’d rather spend an hour making this than deal with that again.
+
 KeyBlocker is a macOS utility that allows you to temporarily disable your keyboard input. This is useful for cleaning your keyboard, preventing accidental keystrokes from pets or children, or simply ensuring no input is registered during certain tasks.
 
 ## Features
