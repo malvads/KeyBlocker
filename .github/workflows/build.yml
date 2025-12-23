@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -24,9 +26,27 @@ jobs:
     - name: Build DMG
       run: make dmg
 
+    - name: Get version
+      id: get_version
+      run: |
+        VERSION=$(grep -A 1 'CFBundleShortVersionString' Info.plist | grep 'string' | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG_NAME=v$VERSION.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
     - name: Upload DMG artifact
       uses: actions/upload-artifact@v4
       with:
         name: KeyBlocker-DMG
         path: KeyBlocker.dmg
         if-no-files-found: error
+
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
+        name: Release ${{ steps.get_version.outputs.TAG_NAME }}
+        files: KeyBlocker.dmg
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
