@@ -31,7 +31,7 @@ jobs:
       run: |
         VERSION=$(grep -A 1 'CFBundleShortVersionString' Info.plist | grep 'string' | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "TAG_NAME=v$VERSION.${{ github.run_number }}" >> $GITHUB_OUTPUT
+        echo "TAG_NAME=v$VERSION" >> $GITHUB_OUTPUT
 
     - name: Upload DMG artifact
       uses: actions/upload-artifact@v4
@@ -45,8 +45,10 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
-        name: Release ${{ steps.get_version.outputs.TAG_NAME }}
+        name: KeyBlocker ${{ steps.get_version.outputs.TAG_NAME }}
         files: KeyBlocker.dmg
         generate_release_notes: true
+        make_latest: true
+        allow_updates: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
