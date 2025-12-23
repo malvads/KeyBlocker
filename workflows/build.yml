@@ -1,0 +1,32 @@
+name: Build and Upload DMG
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up build environment
+      run: |
+        gcc --version
+        make --version
+        brew update
+        brew install pkg-config gtk+3 glib adwaita-icon-theme
+
+    - name: Build DMG
+      run: make dmg
+
+    - name: Upload DMG artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: KeyBlocker-DMG
+        path: KeyBlocker.dmg
+        if-no-files-found: error
