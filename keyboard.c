@@ -87,3 +87,24 @@ void enableKeyboardBlock(bool on) {
 bool isKeyboardBlockEnabled(void) {
     return g_context ? g_context->enabled : false;
 }
+
+void cleanup_keyboard(void) {
+    if (!g_context) return;
+
+    if (g_context->runLoopSource) {
+        CFRunLoopRemoveSource(CFRunLoopGetCurrent(), g_context->runLoopSource, kCFRunLoopCommonModes);
+        CFRelease(g_context->runLoopSource);
+        g_context->runLoopSource = NULL;
+    }
+
+    if (g_context->eventTap) {
+        CGEventTapEnable(g_context->eventTap, false);
+        CFRelease(g_context->eventTap);
+        g_context->eventTap = NULL;
+    }
+
+    free(g_context);
+    g_context = NULL;
+    
+    log_message(KB_LOG_LEVEL_INFO, "Keyboard blocker resources cleaned up.");
+}

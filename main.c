@@ -35,9 +35,14 @@ static int init_keyboard() {
     kb_result_t result = setupKeyboardEventTap();
     if (result != KB_SUCCESS) {
         if (result == KB_ERROR_PERMISSION_DENIED) {
-            log_message(KB_LOG_LEVEL_ERROR, "Accessibility permissions missing. Please enable them in System Settings.");
+            const char *msg = "Accessibility permissions missing. Please enable them in System Settings > Privacy & Security > Accessibility and restart the app.";
+            log_message(KB_LOG_LEVEL_ERROR, msg);
+            show_error_alert("Permission Denied", msg);
         } else {
-            log_message(KB_LOG_LEVEL_ERROR, "Failed to initialize keyboard tap (Error code: %d).", result);
+            char buffer[256];
+            snprintf(buffer, sizeof(buffer), "Failed to initialize keyboard tap (Error code: %d).", result);
+            log_message(KB_LOG_LEVEL_ERROR, buffer);
+            show_error_alert("Critical Error", buffer);
         }
         return 0;
     }
@@ -61,11 +66,8 @@ int main(int argc, char *argv[]) {
     int log_level = parse_arguments(argc, argv);
     set_kb_log_level(log_level);
 
-    log_message(KB_LOG_LEVEL_INFO, "Keyboard blocker started.");
-    if (!init_keyboard()) {
-        return 1;
-    }
-
+    log_message(KB_LOG_LEVEL_INFO, "Keyboard blocker starting (Cocoa Mode)...");
+    
     init_tray();
     run();
 

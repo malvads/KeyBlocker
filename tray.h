@@ -24,4 +24,11 @@ void update_tray_state(bool active);
  */
 void run_app();
 
+/**
+ * @brief Shows a critical error alert to the user.
+ * @param title The title of the alert.
+ * @param message The message body of the alert.
+ */
+void show_error_alert(const char *title, const char *message);
+
 #endif

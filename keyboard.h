@@ -36,4 +36,9 @@ void enableKeyboardBlock(bool on);
  */
 bool isKeyboardBlockEnabled(void);
 
+/**
+ * @brief Cleans up resources used by the keyboard blocker.
+ */
+void cleanup_keyboard(void);
+
 #endif

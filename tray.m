@@ -55,9 +55,22 @@ static NSMenuItem *toggleMenuItem;
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
-    log_message(KB_LOG_LEVEL_INFO, "App Bundle Path: %s", [[[NSBundle mainBundle] bundlePath] UTF8String]);
-    log_message(KB_LOG_LEVEL_DEBUG, "Application finished launching. Setting up tray icon.");
-    
+    log_message(KB_LOG_LEVEL_INFO, "Application finished launching. Setting up tray and keyboard.");
+
+    kb_result_t result = setupKeyboardEventTap();
+    if (result != KB_SUCCESS) {
+        if (result == KB_ERROR_PERMISSION_DENIED) {
+            const char *msg = "Accessibility permissions missing.\n\nPlease enable them in:\nSystem Settings > Privacy & Security > Accessibility\n\nThen restart the app.";
+            show_error_alert("Permission Required", msg);
+        } else {
+            char buffer[256];
+            snprintf(buffer, sizeof(buffer), "Failed to initialize keyboard tap (Error code: %d).", result);
+            show_error_alert("Critical Error", buffer);
+        }
+        [NSApp terminate:nil];
+        return;
+    }
+
     statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];    
     NSImage *image = [NSImage imageNamed:@"tray"];
 
@@ -71,6 +84,9 @@ static NSMenuItem *toggleMenuItem;
         statusItem.button.image = image;
     } else {
         log_message(KB_LOG_LEVEL_ERROR, "Could not find tray icon.");
+    }
+    
+    if (!statusItem.button.image) {
         statusItem.button.title = @"KB";
     }
 
@@ -93,6 +109,11 @@ static NSMenuItem *toggleMenuItem;
     statusItem.menu = menu;
     
     update_tray_state(isKeyboardBlockEnabled());
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification {
+    log_message(KB_LOG_LEVEL_INFO, "Application will terminate. Cleaning up...");
+    cleanup_keyboard();
 }
 
 @end
@@ -130,4 +151,21 @@ void update_tray_state(bool active) {
 void run_app() {
     log_message(KB_LOG_LEVEL_INFO, "Entering main event loop.");
     [NSApp run];
+}
+
+/**
+ * @brief Shows a critical error alert using NSAlert.
+ */
+void show_error_alert(const char *title, const char *message) {
+    NSString *nsTitle = [NSString stringWithUTF8String:title];
+    NSString *nsMessage = [NSString stringWithUTF8String:message];
+
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert setMessageText:nsTitle];
+    [alert setInformativeText:nsMessage];
+    [alert addButtonWithTitle:@"OK"];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    
+    [NSApp activateIgnoringOtherApps:YES];
+    [alert runModal];
 }
