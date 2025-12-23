@@ -49,6 +49,5 @@ jobs:
         files: KeyBlocker.dmg
         generate_release_notes: true
         make_latest: true
-        allow_updates: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
