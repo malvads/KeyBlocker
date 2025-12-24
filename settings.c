@@ -3,9 +3,8 @@
  * @brief Persistent application settings handling.
  *
  * This module implements a very small and dependency-free configuration
- * system based on a plain text key-value file. It is intentionally simple
- * to avoid pulling in external parsers (e.g. JSON libraries) and to keep
- * startup and runtime overhead minimal.
+ * system based on a plain text key-value file stored in
+ * ~/Library/Application Support/KeyBlocker.
  */
 
 #include "settings.h"
@@ -13,11 +12,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 /**
- * @brief Name of the settings file stored on disk.
- *
- * The file is expected to contain one key=value pair per line.
+ * @brief Application folder name inside Application Support.
+ */
+#define APP_SUPPORT_FOLDER "KeyBlocker"
+
+/**
+ * @brief Settings file name.
  */
 #define SETTINGS_FILE "settings.conf"
 
@@ -46,6 +52,31 @@
 #define DEFAULT_BLOCKING_ENABLED false
 
 /**
+ * @brief Constructs the full path to the settings file inside Application Support.
+ *
+ * @param buffer Buffer to store the full path.
+ * @param size Size of the buffer.
+ */
+static void get_settings_path(char *buffer, size_t size) {
+    const char *home = getenv("HOME");
+    if (!home) {
+        struct passwd *pw = getpwuid(getuid());
+        home = pw ? pw->pw_dir : ".";
+    }
+
+    char folder[512];
+    snprintf(folder, sizeof(folder), "%s/Library/Application Support/%s", home, APP_SUPPORT_FOLDER);
+
+    // Ensure the folder exists
+    struct stat st = {0};
+    if (stat(folder, &st) == -1) {
+        mkdir(folder, 0755);
+    }
+
+    snprintf(buffer, size, "%s/%s", folder, SETTINGS_FILE);
+}
+
+/**
  * @brief Loads application settings from disk.
  *
  * The settings file is parsed as a simple line-based key=value format.
@@ -66,9 +97,12 @@ void load_settings(app_settings_t *s) {
     s->shortcut_keycode = DEFAULT_SHORTCUT_KEYCODE;
     s->blocking_enabled = DEFAULT_BLOCKING_ENABLED;
 
-    FILE *f = fopen(SETTINGS_FILE, "r");
+    char path[512];
+    get_settings_path(path, sizeof(path));
+
+    FILE *f = fopen(path, "r");
     if (!f) {
-        log_message(KB_LOG_LEVEL_INFO, "No settings file found, using defaults.");
+        log_message(KB_LOG_LEVEL_INFO, "No settings file found at %s, using defaults.", path);
         return;
     }
 
@@ -92,8 +126,9 @@ void load_settings(app_settings_t *s) {
             }
         }
     }
+
     fclose(f);
-    log_message(KB_LOG_LEVEL_INFO, "Settings loaded successfully.");
+    log_message(KB_LOG_LEVEL_INFO, "Settings loaded successfully from %s.", path);
 }
 
 /**
@@ -109,9 +144,12 @@ void load_settings(app_settings_t *s) {
 void save_settings(const app_settings_t *s) {
     if (!s) return;
 
-    FILE *f = fopen(SETTINGS_FILE, "w");
+    char path[512];
+    get_settings_path(path, sizeof(path));
+
+    FILE *f = fopen(path, "w");
     if (!f) {
-        log_message(KB_LOG_LEVEL_ERROR, "Failed to open settings file for writing.");
+        log_message(KB_LOG_LEVEL_ERROR, "Failed to open settings file for writing at %s.", path);
         return;
     }
 
@@ -120,7 +158,7 @@ void save_settings(const app_settings_t *s) {
     fprintf(f, "shortcut_flags=%llu\n", (unsigned long long)s->shortcut_flags);
     fprintf(f, "shortcut_keycode=%hu\n", s->shortcut_keycode);
     fprintf(f, "blocking_enabled=%d\n", s->blocking_enabled ? 1 : 0);
-    
+
     fclose(f);
-    log_message(KB_LOG_LEVEL_DEBUG, "Settings saved.");
+    log_message(KB_LOG_LEVEL_DEBUG, "Settings saved to %s.", path);
 }
