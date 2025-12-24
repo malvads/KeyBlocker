@@ -13,7 +13,7 @@ jobs:
       contents: write
     strategy:
       matrix:
-        arch: [ x86_64, arm64 ]
+        arch: [ x86_64 ]
 
     steps:
     - name: Checkout code
@@ -37,13 +37,13 @@ jobs:
         make dmg \
           CFLAGS="-arch ${{ matrix.arch }} -Wall -g" \
           LDFLAGS="-arch ${{ matrix.arch }} -framework ApplicationServices -framework Cocoa -framework Carbon" \
-          DMG_NAME="KeyBlocker-${{ matrix.arch }}.dmg"
+          DMG_NAME="KeyBlocker.dmg"
 
     - name: Upload DMG artifact
       uses: actions/upload-artifact@v4
       with:
-        name: KeyBlocker-DMG-${{ matrix.arch }}
-        path: KeyBlocker-${{ matrix.arch }}.dmg
+        name: KeyBlocker-DMG
+        path: KeyBlocker.dmg
         if-no-files-found: error
 
   release:
@@ -59,17 +59,8 @@ jobs:
     - name: Download x86_64 DMG artifact
       uses: actions/download-artifact@v4
       with:
-        name: KeyBlocker-DMG-x86_64
+        name: KeyBlocker-DMG
         path: artifacts
-
-    - name: Download arm64 DMG artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: KeyBlocker-DMG-arm64
-        path: artifacts
-
-    - name: List downloaded artifacts
-      run: ls -la artifacts
 
     - name: Get version
       id: get_version
@@ -86,8 +77,7 @@ jobs:
         tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
         name: KeyBlocker ${{ steps.get_version.outputs.TAG_NAME }}
         files: |
-          artifacts/KeyBlocker-x86_64.dmg
-          artifacts/KeyBlocker-arm64.dmg
+          artifacts/KeyBlocker.dmg
         generate_release_notes: true
         make_latest: true
       env:
