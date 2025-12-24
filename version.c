@@ -11,7 +11,7 @@ const char *KB_VERSION = "1.2";
 /** 
  * @brief URL of the remote version file.
  */
-#define REMOTE_VERSION_URL "https://raw.githubusercontent.com/malvads/KeyBlocker/main/version.h"
+#define REMOTE_VERSION_URL "https://raw.githubusercontent.com/malvads/KeyBlocker/main/version.c"
 
 /**
  * @brief Get the current software version.
