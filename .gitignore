@@ -8,6 +8,9 @@ xcuserdata/
 ## Obj-C/Swift specific
 *.hmap
 
+## KeyBlocker specific
+settings.conf
+
 ## App packaging
 *.ipa
 *.dSYM.zip

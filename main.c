@@ -1,9 +1,29 @@
+/**
+ * @file main.c
+ * @brief Entry point for the macOS keyboard blocker application (Cocoa mode).
+ *
+ * Handles command-line argument parsing, logging setup, and initializes the
+ * system tray UI and event loop.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include "keyboard.h"
 #include "tray.h"
 #include "logger.h"
+#include "version.h"
 
+/**
+ * @brief Parses command-line arguments to determine the logging level.
+ *
+ * Recognizes:
+ * - `-v` or `--verbose`: enables debug logging
+ * - `--log-level <level>`: sets logging level explicitly (debug, info, error)
+ *
+ * @param argc Argument count
+ * @param argv Argument vector
+ * @return Combined bitmask of logging levels to enable
+ */
 static int parse_arguments(int argc, char *argv[]) {
     int log_level = KB_LOG_LEVEL_INFO | KB_LOG_LEVEL_ERROR;
 
@@ -27,47 +47,48 @@ static int parse_arguments(int argc, char *argv[]) {
 
     return log_level;
 }
-/**
- * @brief Initializes the keyboard blocking logic.
- * @return 1 on success, 0 on failure.
- */
-static int init_keyboard() {
-    kb_result_t result = setupKeyboardEventTap();
-    if (result != KB_SUCCESS) {
-        if (result == KB_ERROR_PERMISSION_DENIED) {
-            const char *msg = "Accessibility permissions missing. Please enable them in System Settings > Privacy & Security > Accessibility and restart the app.";
-            log_message(KB_LOG_LEVEL_ERROR, msg);
-            show_error_alert("Permission Denied", msg);
-        } else {
-            char buffer[256];
-            snprintf(buffer, sizeof(buffer), "Failed to initialize keyboard tap (Error code: %d).", result);
-            log_message(KB_LOG_LEVEL_ERROR, buffer);
-            show_error_alert("Critical Error", buffer);
-        }
-        return 0;
-    }
-    log_message(KB_LOG_LEVEL_INFO, "Keyboard tap initialized successfully.");
-    return 1;
-}
 
 /**
- * @brief Sets up the system tray icon.
+ * @brief Initializes the macOS system tray icon and menu.
+ *
+ * Wraps the `setup_tray_icon` call and logs successful initialization.
  */
 static void init_tray() {
     setup_tray_icon();
     log_message(KB_LOG_LEVEL_INFO, "Tray icon initialized successfully.");
 }
+
+/**
+ * @brief Starts the Cocoa application run loop.
+ *
+ * This function will not return until the application exits. Logs when the
+ * event loop has started.
+ */
 static void run() {
     run_app();
     log_message(KB_LOG_LEVEL_INFO, "Keyboard Blocker running successfully.");
 }
 
+
+/**
+ * @brief Main entry point of the keyboard blocker application.
+ *
+ * - Parses command-line arguments
+ * - Sets up logging
+ * - Initializes the tray icon
+ * - Runs the main Cocoa event loop
+ *
+ * @param argc Argument count
+ * @param argv Argument vector
+ * @return Exit status code (0 on success)
+ */
 int main(int argc, char *argv[]) {
     int log_level = parse_arguments(argc, argv);
     set_kb_log_level(log_level);
 
     log_message(KB_LOG_LEVEL_INFO, "Keyboard blocker starting (Cocoa Mode)...");
-    
+    log_message(KB_LOG_LEVEL_INFO, "Current version: %s", KB_VERSION);
+
     init_tray();
     run();
 

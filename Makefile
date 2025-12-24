@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -Wall -g
-LDFLAGS = -framework ApplicationServices -framework Cocoa
+LDFLAGS = -framework ApplicationServices -framework Cocoa -framework Carbon
 
 TARGET = key_blocker
-SRCS = main.c keyboard.c logger.c
+SRCS = main.c keyboard.c logger.c settings.c version.c
 OBJC_SRCS = tray.m
 OBJS = $(SRCS:.c=.o) $(OBJC_SRCS:.m=.o)
 
