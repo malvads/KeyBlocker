@@ -1,3 +1,7 @@
+/**
+ * @file version.c
+ * @brief Handles software versioning and update checks for KeyBlocker.
+ */
 #include "version.h"
 #include <stdio.h>
 #include <stdlib.h>
