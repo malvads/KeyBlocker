@@ -67,7 +67,6 @@ static void get_settings_path(char *buffer, size_t size) {
     char folder[512];
     snprintf(folder, sizeof(folder), "%s/Library/Application Support/%s", home, APP_SUPPORT_FOLDER);
 
-    // Ensure the folder exists
     struct stat st = {0};
     if (stat(folder, &st) == -1) {
         mkdir(folder, 0755);
