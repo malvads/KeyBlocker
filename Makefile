@@ -1,6 +1,6 @@
-CC = gcc
-CFLAGS = -Wall -g
-LDFLAGS = -framework ApplicationServices -framework Cocoa -framework Carbon
+CC ?= gcc
+CFLAGS ?= -Wall -g
+LDFLAGS ?= -framework ApplicationServices -framework Cocoa -framework Carbon
 
 TARGET = key_blocker
 SRCS = main.c keyboard.c logger.c settings.c version.c
@@ -11,6 +11,8 @@ APP_NAME = KeyBlocker.app
 APP_CONTENTS = $(APP_NAME)/Contents
 APP_MACOS = $(APP_CONTENTS)/MacOS
 APP_RESOURCES = $(APP_CONTENTS)/Resources
+
+DMG_NAME ?= $(APP_NAME:.app=.dmg)
 
 all: $(TARGET)
 
@@ -24,13 +26,14 @@ bundle: $(TARGET)
 	@echo "Bundle created: $(APP_NAME)"
 
 dmg: bundle
-	rm -f $(APP_NAME:.app=.dmg)
+	rm -f $(DMG_NAME)
 	mkdir -p dmg_temp
 	cp -R $(APP_NAME) dmg_temp/
 	ln -s /Applications dmg_temp/Applications
-	hdiutil create -volname "$(APP_NAME:.app=)" -srcfolder dmg_temp -ov -format UDZO $(APP_NAME:.app=.dmg)
+	# Create compressed UDZO dmg
+	hdiutil create -volname "$(APP_NAME:.app=)" -srcfolder dmg_temp -ov -format UDZO "$(DMG_NAME)"
 	rm -rf dmg_temp
-	@echo "Distribution DMG created: $(APP_NAME:.app=.dmg)"
+	@echo "Distribution DMG created: $(DMG_NAME)"
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
@@ -44,7 +47,7 @@ $(TARGET): $(OBJS)
 clean:
 	rm -f $(TARGET) $(OBJS)
 	rm -rf $(APP_NAME)
-	rm -f $(APP_NAME:.app=.dmg)
+	rm -f $(DMG_NAME)
 	rm -rf dmg_temp
 
 .PHONY: all clean bundle dmg

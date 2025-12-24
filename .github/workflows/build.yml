@@ -11,10 +11,9 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
-
     strategy:
       matrix:
-        arch: [x86_64, arm64]
+        arch: [ x86_64, arm64 ]
 
     steps:
     - name: Checkout code
@@ -22,27 +21,23 @@ jobs:
 
     - name: Set up build environment
       run: |
+        set -euo pipefail
         gcc --version
         make --version
         brew update
         brew install pkg-config gtk+3 glib adwaita-icon-theme
 
-    - name: Build DMG
+    - name: Build DMG for ${{ matrix.arch }}
       run: |
+        set -euo pipefail
         echo "Building for ${{ matrix.arch }}"
-        export CFLAGS="-arch ${{ matrix.arch }}"
-        export LDFLAGS="-arch ${{ matrix.arch }}"
+        # Clean previous output
         make clean
-        make all
-        # Rename DMG to include architecture
-        mv KeyBlocker.dmg KeyBlocker-${{ matrix.arch }}.dmg
-
-    - name: Get version
-      id: get_version
-      run: |
-        VERSION=$(grep -A 1 'CFBundleShortVersionString' Info.plist | grep 'string' | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "TAG_NAME=v$VERSION" >> $GITHUB_OUTPUT
+        # Call make dmg and override CFLAGS/LDFLAGS and DMG_NAME so the Makefile respects the arch
+        make dmg \
+          CFLAGS="-arch ${{ matrix.arch }} -Wall -g" \
+          LDFLAGS="-arch ${{ matrix.arch }} -framework ApplicationServices -framework Cocoa -framework Carbon" \
+          DMG_NAME="KeyBlocker-${{ matrix.arch }}.dmg"
 
     - name: Upload DMG artifact
       uses: actions/upload-artifact@v4
@@ -51,13 +46,48 @@ jobs:
         path: KeyBlocker-${{ matrix.arch }}.dmg
         if-no-files-found: error
 
-    - name: Create Release (once)
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.arch == 'x86_64'
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout (for Info.plist)
+      uses: actions/checkout@v4
+
+    - name: Download x86_64 DMG artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: KeyBlocker-DMG-x86_64
+        path: artifacts
+
+    - name: Download arm64 DMG artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: KeyBlocker-DMG-arm64
+        path: artifacts
+
+    - name: List downloaded artifacts
+      run: ls -la artifacts
+
+    - name: Get version
+      id: get_version
+      run: |
+        set -euo pipefail
+        # extract version from Info.plist in repo
+        VERSION=$(grep -A 1 'CFBundleShortVersionString' Info.plist | grep 'string' | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG_NAME=v$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
         name: KeyBlocker ${{ steps.get_version.outputs.TAG_NAME }}
-        files: KeyBlocker-x86_64.dmg KeyBlocker-arm64.dmg
+        files: |
+          artifacts/KeyBlocker-x86_64.dmg
+          artifacts/KeyBlocker-arm64.dmg
         generate_release_notes: true
         make_latest: true
       env:
