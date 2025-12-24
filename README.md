@@ -11,6 +11,9 @@ KeyBlocker is a macOS utility that allows you to temporarily disable your keyboa
 ## Features
 
 - **Keyboard Blocking**: Intercepts and blocks all keyboard events.
+- **Update Checking**: Checks for updates and notifies the user if a new version is available.
+- **Settings**: Configurable settings for keyboard blocking.
+- **Custom Panic Shortcut**: Set a custom panic shortcut to quickly toggle keyboard blocking.
 - **System Tray Integration**: Easily toggle blocking from the macOS menu bar.
 - **Logging**: Configurable logging levels (Info, Error, Debug) for troubleshooting.
 - **Ease of Use**: Simple command-line interface and minimalist UI.
@@ -63,24 +66,20 @@ You can run the application directly from the binary or open the created bundle.
 ![KeyBlocker](assets/example.png)
 
 Once running, you will see a tray icon in your menu bar. 
-- Click the icon to toggle the keyboard block on or off.
-- The tray icon will change state to indicate whether the keyboard is currently blocked.
+- Click the icon to display KeyBlocker's window.
+- Click the switch to toggle keyboard blocking on or off.
+- Click "Enable Shortcut" to enable the custom panic shortcuts.
+- Click "Unlock Shortcut" to write your own custom panic shortcut command (Needs Enable Shortcut to be enabled).
 
 ### Command Line Arguments
 
 - `-v`, `--verbose`: Enable debug logging.
 - `--log-level <level>`: Set the log level. Available levels: `debug`, `info`, `error`.
 
-## Project Structure
-
-- `main.c`: Entry point of the application.
-- `keyboard.c` / `keyboard.h`: Core logic for keyboard event interception.
-- `tray.m` / `tray.h`: macOS system tray (menu bar) implementation using Objective-C and Cocoa.
-- `logger.c` / `logger.h`: Logging utility.
-- `Makefile`: Build instructions.
-- `Info.plist`: Metadata for the application bundle.
-- `assets/`: Icons and images used by the application.
-
 ## License
 
 This project is licensed under the Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details (if applicable).
+
+## Author
+
+Miguel Álvarez 
